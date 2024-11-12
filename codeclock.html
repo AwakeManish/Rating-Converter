@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Codeforces to Codechef rating converter</title>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  
+  <style>
+     body {
+      background-color: #1e1e1e;
+      font-family: 'Courier New', Courier, monospace;
+      color: #ffffff;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #ffffff;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .container2{
+      max-width: 500px;
+      margin: 5px auto;
+      padding: 5px;
+      background-color: #333333;
+      border-radius: 5px;
+      border: 3px inset #ff6600;
+    }
+    h1 {
+      margin-top: 70px;
+    }
+    h2{
+      color:#000;
+      margin-top: 20px;
+    }
+
+    .navbar {
+      background-color: #333333;
+      height: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .navbar ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .navbar ul li {
+      display: inline-block;
+      margin-right: 10px;
+    }
+
+    .navbar ul li a {
+      color: #ffffff;
+      text-decoration: none;
+      padding: 10px;
+    }
+
+    .navbar ul li a:hover {
+      background-color: #ff6600;
+    }
+    .submit-btn {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 18px;
+      border-radius: 5px;
+      border: none;
+      background-color: #ff6600;
+      color: #ffffff;
+      cursor: pointer;
+    }
+
+    .submit-btn:hover {
+      background-color: #ff8533;
+    }
+    #loadingStatus {
+      display: none;
+      text-align: center;
+      margin: 20px;
+      font-weight: bold;
+      color: black;
+    }
+
+  </style>
+  <script>
+    $(document).ready(function() {
+      // Function to fetch and display Codeforces contest information
+      function fetchCodeforcesContests() {
+        // Make an API request to Codeforces
+        $.ajax({
+          url: 'https://codeforces.com/api/contest.list',
+          method: 'GET',
+          dataType: 'json',
+          success: function(response) {
+            // Extract the details of the most recent 4 contests
+            var contests = response.result.slice(0, 4);
+
+            // Update the content of the container
+            var container = $('.container2.codeforces-contest');
+            container.html('<p style="font-size:20px; color:#ffa756;"><b>Upcoming  Codeforces Contests:</b></p>');
+            
+            contests.forEach(function(contest) {
+              var startTime = new Date(contest.startTimeSeconds * 1000);
+              var formattedTime = startTime.toLocaleString();
+              container.append('<p>' + contest.name + ' - ' + formattedTime + '</p>');
+            });
+          },
+          error: function(error) {
+            console.log('Error fetching Codeforces contests:', error);
+          }
+        });
+      }
+
+      // Call the function to fetch and display Codeforces contest information
+      fetchCodeforcesContests();
+    });
+  </script>
+
+</head>
+<body>
+
+    <div class="navbar">
+        <ul>
+          <li><a href="home.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="status.html">Status</a></li>
+          <li><a href="codeclock.html">Codeclock</a></li>
+        </ul>
+      </div>
+
+  <h1>CodeClock!</h1>
+  <div class="container">
+    
+    <h2>Codeforces</h2>
+    <div class="container2 codeforces-contest">
+    </div>
+    <div id="contest-info">
+    </div>
+    <div id="loadingStatus">Loading...</div>
+    <button type="button" class="submit-btn" id="reloadButton">Refresh</button>
+  </div>
+  <script>
+    function showLoadingStatus() {
+      document.getElementById('loadingStatus').style.display='block'
+    }
+    function hideLoadingStatus() {
+      document.getElementById('loadingStatus').style.display='none'
+    }
+    function fetchData() {
+      showLoadingStatus();
+      fetch('http://localhost:8000/codeclock')
+      .then(response => response.json())
+      .then(data => {
+          // Get the contest information div
+          const contestInfoDiv = document.getElementById('contest-info');
+          console.log(data);
+          // Loop through the JSON data and create HTML elements
+          Object.keys(data).forEach(platform => {
+              const platformDiv = document.createElement('div');
+              platformDiv.innerHTML = `<h2>${platform}</h2>`;
+
+              const contestsDiv = document.createElement('div');
+              contestsDiv.classList.add('container2')
+              Object.keys(data[platform]).forEach(contest => {
+                  const contestData = data[platform][contest];
+                  if (contestData.name!==undefined) {
+                    const contestDiv = document.createElement('div');
+                    contestDiv.innerHTML = `<h3>${contestData.name}</h3>
+                                          <p>${contestData.info || contestData.time}</p>`;
+
+                    contestsDiv.appendChild(contestDiv);
+                  }
+              });
+
+              platformDiv.appendChild(contestsDiv);
+              contestInfoDiv.appendChild(platformDiv);
+          });
+          hideLoadingStatus();
+      })
+      .catch(error => {
+        console.error('Error fetching data:', error);
+        hideLoadingStatus();
+      });
+
+    }
+    document.getElementById('reloadButton').addEventListener('click', function() {
+    // Reload the page
+    location.reload();
+});
+fetchData();
+</script>
+
+  </script>
+  
+</body>
+</html>
